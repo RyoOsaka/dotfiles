@@ -18,3 +18,5 @@ desktop.ini
 
 # WSL / Windows 由来
 *:Zone.Identifier
+
+**/.claude/settings.local.json

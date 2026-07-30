@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(timeout 180 nvim --headless \"+Lazy! sync\" +qa)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(bash -n /home/osaka/dotfiles/install.sh)",
+      "Bash(bash -c 'source /dev/stdin <<< \"$\\(sed -n \"/^install_claude_code\\(\\)/,/^}/p\" /home/osaka/dotfiles/install.sh; grep -E \"^\\(info|warn\\)\\\\\\(\\\\\\)\" /home/osaka/dotfiles/install.sh\\)\"; install_claude_code')"
+    ]
+  }
+}

@@ -1,8 +1,9 @@
 # ~/.gitconfig
-[user]
-	# TODO: 自分の名前とメールアドレスに書き換えてください
-	name = Ryo
-	email = amurot3@gmail.com
+# [user] (name / email) はコミットしないよう ~/.gitconfig.local に書いてください。
+# 例:
+#   [user]
+#   	name = Your Name
+#   	email = you@example.com
 
 [core]
 	editor = nvim

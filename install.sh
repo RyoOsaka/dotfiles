@@ -209,7 +209,67 @@ install_docker() {
 }
 
 # ----------------------------------------------------------------------
-# 4. シンボリックリンク作成
+# 4. Claude Code
+# ----------------------------------------------------------------------
+install_claude_code() {
+    if command -v claude >/dev/null 2>&1; then
+        info "Claude Code は既にインストール済みです($(claude --version 2>/dev/null || echo 'version 不明'))。スキップします。"
+        return
+    fi
+
+    info "Claude Code をインストールします..."
+    if curl -fsSL https://claude.ai/install.sh | bash >/dev/null 2>&1; then
+        info "Claude Code をインストールしました ($HOME/.local/bin/claude)"
+        info "初回は 'claude' を実行してログインしてください。"
+    else
+        warn "Claude Code のインストールに失敗しました(続行します)"
+    fi
+}
+
+# ----------------------------------------------------------------------
+# 5. git ユーザー設定(~/.gitconfig.local)
+# ----------------------------------------------------------------------
+setup_git_user() {
+    local conf="$HOME/.gitconfig.local"
+    local name email
+    name="$(git config --file "$conf" user.name 2>/dev/null || true)"
+    email="$(git config --file "$conf" user.email 2>/dev/null || true)"
+
+    if [ -n "$name" ] && [ -n "$email" ]; then
+        info "git ユーザー設定済み: $name <$email> (~/.gitconfig.local)"
+        return
+    fi
+
+    # 非対話実行時(CI やパイプ経由)は案内だけ出して続行
+    if [ ! -t 0 ]; then
+        warn "~/.gitconfig.local に git のユーザー情報がありません。後で設定してください:"
+        printf '    git config --file ~/.gitconfig.local user.name "Your Name"\n'
+        printf '    git config --file ~/.gitconfig.local user.email "you@example.com"\n'
+        return
+    fi
+
+    info "git のユーザー情報を設定します(~/.gitconfig.local に保存。空 Enter でスキップ)"
+    local input
+    read -rp "  user.name : " input
+    if [ -n "$input" ]; then
+        git config --file "$conf" user.name "$input"
+        name="$input"
+    fi
+    read -rp "  user.email: " input
+    if [ -n "$input" ]; then
+        git config --file "$conf" user.email "$input"
+        email="$input"
+    fi
+
+    if [ -n "$name" ] && [ -n "$email" ]; then
+        info "設定しました: $name <$email>"
+    else
+        warn "未設定の項目があります。後で上記コマンドか再実行で設定できます。"
+    fi
+}
+
+# ----------------------------------------------------------------------
+# 6. シンボリックリンク作成
 # ----------------------------------------------------------------------
 link_file() {
     local src="$1" dest="$2"
@@ -262,11 +322,15 @@ main() {
         install_packages
         install_node
         install_docker
+        install_claude_code
     else
         info "--link-only: パッケージインストールをスキップします"
     fi
 
     create_links
+
+    # git のユーザー情報はリポジトリに含めないため、~/.gitconfig.local に書く
+    setup_git_user
 
     echo
     info "セットアップ完了! 'source ~/.bashrc' するか、新しいシェルを開いてください。"

@@ -101,6 +101,7 @@ require("lazy").setup({
   -- シンタックスハイライト
   {
     "nvim-treesitter/nvim-treesitter",
+    branch = "master",  -- main ブランチは新API(configs モジュール廃止)のため master に固定
     build = ":TSUpdate",
     config = function()
       require("nvim-treesitter.configs").setup({

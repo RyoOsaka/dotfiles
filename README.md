@@ -11,11 +11,12 @@ dotfiles/
 │   ├── .bashrc             # bash 本体設定(履歴・プロンプト・fzf・WSL 連携)
 │   └── .bash_aliases       # エイリアス(eza / bat / git ショートカット等)
 ├── git/
-│   ├── .gitconfig          # git 設定(エイリアス・WSL 向け autocrlf 等)
+│   ├── .gitconfig          # git 設定(エイリアス・WSL 向け autocrlf 等。user は ~/.gitconfig.local へ)
 │   └── .gitignore_global   # 全リポジトリ共通 ignore
 ├── nvim/
 │   └── .config/nvim/
-│       └── init.lua        # Neovim 設定(lazy.nvim + 基本プラグイン)
+│       ├── init.lua        # Neovim 設定(lazy.nvim + 基本プラグイン)
+│       └── lazy-lock.json  # プラグインのバージョン固定(lockfile)
 └── starship/
     └── .config/
         └── starship.toml   # starship プロンプト設定
@@ -37,7 +38,8 @@ cd ~/dotfiles
 4. win32yank のインストール(WSL ↔ Windows クリップボード連携)
 5. **Node.js LTS** のインストール(nvm 経由。corepack 有効化で pnpm / yarn も利用可)
 6. **Docker Engine** のインストール(WSL ネイティブ。docker compose / buildx プラグイン付き)
-7. シンボリックリンクの作成(既存ファイルは `~/.dotfiles_backup/<日時>/` に退避)
+7. **Claude Code** のインストール(公式インストーラ。`~/.local/bin/claude`。初回は `claude` 実行でログイン)
+8. シンボリックリンクの作成(既存ファイルは `~/.dotfiles_backup/<日時>/` に退避)
 
 ### Docker についての注意
 
@@ -66,23 +68,27 @@ cd ~/dotfiles
 git 管理したくない設定は以下のファイルに書きます(存在すれば自動で読み込まれます)。
 
 - `~/.bashrc.local` — マシン固有のシェル設定
-- `~/.gitconfig.local` — マシン固有の git 設定(仕事用メールアドレスなど)
+- `~/.gitconfig.local` — マシン固有の git 設定
+
+**git の名前・メールアドレス**はリポジトリにコミットしないよう、
+`.gitconfig` ではなく `~/.gitconfig.local` に保存します。
+未設定の場合は `install.sh` 実行時に対話で入力を求められます(空 Enter でスキップ可)。
+後から設定・変更する場合は:
+
+```bash
+git config --file ~/.gitconfig.local user.name "Your Name"
+git config --file ~/.gitconfig.local user.email "you@example.com"
+```
 
 ## Neovim
 
 初回起動時に lazy.nvim とプラグインが自動インストールされます。
+`lazy-lock.json` をコミットしているので、`:Lazy restore` で
+このリポジトリと同じプラグインバージョンに揃えられます
+(プラグイン更新後は変化した `lazy-lock.json` をコミットしてください)。
+
 主なキーマップ(Leader = Space):
 
 - `Space ff` ファイル検索 / `Space fg` 全文検索(Telescope)
 - `gcc` コメントトグル
 - `Ctrl-h/j/k/l` ウィンドウ移動
-
-## GitHub での管理を始めるには
-
-```bash
-cd ~/dotfiles
-git init
-git add -A
-git commit -m "Initial dotfiles"
-gh repo create dotfiles --private --source=. --push   # gh CLI がある場合
-```
