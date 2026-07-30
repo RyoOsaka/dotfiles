@@ -8,8 +8,9 @@
 
 add_newline = true          # プロンプト間に空行を入れる
 
-# 1行目の右端に時刻を表示(bash は right_format 非対応のため fill で右寄せ)
-format = "$all$fill$time$line_break$character"
+# 1行目の右端に CPU・メモリ使用率と時刻を表示
+# (bash は right_format 非対応のため fill で右寄せ)
+format = "$all$fill${custom.cpu}$memory_usage$time$line_break$character"
 
 [fill]
 symbol = " "                # 左側と時刻の間を空白で埋める
