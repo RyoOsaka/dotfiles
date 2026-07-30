@@ -1,0 +1,42 @@
+# ~/.config/starship.toml — starship プロンプト設定
+# ドキュメント: https://starship.rs/config/
+#
+# アイコンをリッチにしたい場合は Nerd Font を端末に設定した上で
+#   starship preset nerd-font-symbols -o ~/dotfiles/starship/.config/starship.toml
+# を実行するとプリセットで上書きできます。
+
+# プロンプト全体のフォーマット(デフォルトからほぼ変更なし)
+add_newline = true          # プロンプト間に空行を入れる
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+
+[directory]
+truncation_length = 4       # 表示するディレクトリ階層数
+truncate_to_repo = true     # git リポジトリのルートで打ち切る
+
+[git_branch]
+symbol = "git:"             # Nerd Font 不要のプレーン表示
+
+[git_status]
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+
+[nodejs]
+symbol = "node "            # Nerd Font 不要のプレーン表示
+detect_files = ["package.json", ".nvmrc"]
+
+[docker_context]
+symbol = "docker "
+only_with_files = true      # compose ファイル等があるときだけ表示
+
+[python]
+symbol = "py "
+
+[cmd_duration]
+min_time = 2000             # 2秒以上かかったコマンドは実行時間を表示
+
+[time]
+disabled = true             # 右側に時刻を出したい場合は false に

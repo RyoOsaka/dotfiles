@@ -1,0 +1,58 @@
+# ~/.gitconfig
+[user]
+	# TODO: 自分の名前とメールアドレスに書き換えてください
+	name = Ryo
+	email = amurot3@gmail.com
+
+[core]
+	editor = nvim
+	excludesfile = ~/.gitignore_global
+	autocrlf = input      # WSL では input 推奨(コミット時に CRLF→LF)
+	quotepath = false     # 日本語ファイル名をエスケープせず表示
+
+[init]
+	defaultBranch = main
+
+[pull]
+	rebase = false
+
+[push]
+	default = current
+	autoSetupRemote = true
+
+[fetch]
+	prune = true
+
+[diff]
+	algorithm = histogram
+	colorMoved = default
+
+[merge]
+	conflictstyle = zdiff3
+
+[rerere]
+	enabled = true        # 一度解決したコンフリクトを記憶
+
+[alias]
+	st = status -sb
+	co = checkout
+	sw = switch
+	br = branch
+	cm = commit -m
+	lg = log --oneline --graph --decorate --all -20
+	last = log -1 HEAD --stat
+	unstage = restore --staged
+	amend = commit --amend --no-edit
+
+# delta がインストールされている場合は以下のコメントを外すと diff が見やすくなります
+# [core]
+# 	pager = delta
+# [interactive]
+# 	diffFilter = delta --color-only
+# [delta]
+# 	navigate = true
+# 	side-by-side = true
+
+[include]
+	# マシン固有の設定(git 管理外)はこちらへ
+	path = ~/.gitconfig.local

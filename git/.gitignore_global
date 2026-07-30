@@ -1,0 +1,20 @@
+# ~/.gitignore_global — 全リポジトリ共通の ignore
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# エディタ
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# 環境
+.env.local
+*.log
+
+# WSL / Windows 由来
+*:Zone.Identifier
