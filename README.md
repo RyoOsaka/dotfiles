@@ -22,6 +22,43 @@ dotfiles/
         └── starship.toml   # starship プロンプト設定
 ```
 
+## Windows 側の準備
+
+WSL 内のセットアップとは別に、Windows 側で以下をやっておくと快適です。
+
+### Nerd Font のインストール(推奨)
+
+starship のアイコン・eza の `--icons`・nvim の lualine はNerd Font 前提です。
+PowerShell で:
+
+```powershell
+winget install --id DEVCOM.JetBrainsMonoNerdFont
+```
+
+インストール後、フォントを設定します。
+
+- **Windows Terminal**: 設定 → プロファイル (Ubuntu) → 外観 → フォントフェイス → `JetBrainsMono Nerd Font`
+- **VS Code**: `settings.json` に `"terminal.integrated.fontFamily": "JetBrainsMono Nerd Font"`
+
+フォントが無くてもプロンプト等は動作します(アイコンが「□」に化けるだけ)。
+
+### VS Code は WSL モードで使う
+
+VS Code に **WSL 拡張機能**(Microsoft 製「WSL」)を入れ、WSL 内のリポジトリは
+WSL のターミナルから `code .` で開きます(ウィンドウ左下に「WSL: Ubuntu」と出ていれば OK)。
+
+Windows 側から直接開くと git / SSH が **Windows 側のもの**で動くため、
+SSH 鍵が WSL 内にしか無い場合 `git push` が Permission denied になります。
+
+### SSH 鍵は WSL 側で作る
+
+GitHub 用の SSH 鍵は WSL 内で作成・登録します(Windows 側との二重管理を避けるため)。
+
+```bash
+ssh-keygen -t ed25519 -C "you@example.com"
+cat ~/.ssh/id_ed25519.pub   # これを GitHub → Settings → SSH keys に登録
+```
+
 ## セットアップ
 
 ```bash
