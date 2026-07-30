@@ -1,3 +1,5 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
 # ~/.config/starship.toml — starship プロンプト設定
 # ドキュメント: https://starship.rs/config/
 #
@@ -5,6 +7,12 @@
 # 端末フォントに Nerd Font (例: JetBrainsMono Nerd Font) が必要です。
 
 add_newline = true          # プロンプト間に空行を入れる
+
+# 1行目の右端に時刻を表示(bash は right_format 非対応のため fill で右寄せ)
+format = "$all$fill$time$line_break$character"
+
+[fill]
+symbol = " "                # 左側と時刻の間を空白で埋める
 
 [character]
 success_symbol = "[❯](bold green)"
@@ -19,10 +27,11 @@ diverged = "⇕⇡${ahead_count}⇣${behind_count}"
 min_time = 2000             # 2秒以上かかったコマンドは実行時間を表示
 
 [time]
-disabled = true             # 右側に時刻を出したい場合は false に
+disabled = false            # 1行目右端に時刻を表示(不要なら true に)
+time_format = "%H:%M:%S"
+format = "[$time]($style)"  # デフォルトの 'at' プレフィックスを外す
 
 # ---- 以下 nerd-font-symbols プリセット(+一部カスタム) ----
-"$schema" = 'https://starship.rs/config-schema.json'
 
 [aws]
 symbol = " "
