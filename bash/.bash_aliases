@@ -59,6 +59,9 @@ alias nr='npm run'
 alias nrd='npm run dev'
 alias nrb='npm run build'
 
+# AI Agents (Gemini / Antigravity / Claude)
+command -v agy >/dev/null 2>&1 && alias gemini='agy'
+
 # その他
 alias vi='nvim'
 alias vim='nvim'

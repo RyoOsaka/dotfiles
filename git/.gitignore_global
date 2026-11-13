@@ -19,4 +19,7 @@ desktop.ini
 # WSL / Windows 由来
 *:Zone.Identifier
 
+# AI Agents (ローカル専用設定)
 **/.claude/settings.local.json
+**/.gemini/settings.local.json
+**/.agents/settings.local.json

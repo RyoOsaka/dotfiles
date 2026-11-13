@@ -49,7 +49,7 @@ install_packages() {
     # 基本ツール + モダン CLI ツール
     # 1つずつインストールする(一括だと存在しないパッケージが1つあるだけで全滅するため)
     local pkgs=(build-essential curl wget git unzip bash-completion
-                ripgrep fzf fd-find bat jq tree htop wslu)
+                ripgrep fzf fd-find bat jq tree htop wslu dnsutils whois)
     local failed=()
     local pkg
     for pkg in "${pkgs[@]}"; do
@@ -309,7 +309,73 @@ create_links() {
     # starship
     link_file "$DOTFILES_DIR/starship/.config/starship.toml" "$HOME/.config/starship.toml"
 
+    # AI Agents (共通グローバルルール AGENTS.md -> Gemini / Claude 両方へリンク)
+    link_file "$DOTFILES_DIR/agents/AGENTS.md" "$HOME/.gemini/GEMINI.md"
+    link_file "$DOTFILES_DIR/agents/AGENTS.md" "$HOME/.claude/CLAUDE.md"
+
+    # ~/.agents/skills/* の共通スキルを Gemini / Claude 両方の skills ディレクトリへリンク
+    if [ -d "$HOME/.agents/skills" ]; then
+        mkdir -p "$HOME/.gemini/config/skills" "$HOME/.claude/skills"
+        local skill_dir skill_name
+        for skill_dir in "$HOME/.agents/skills"/*; do
+            # シンボリックリンク(別名エイリアス等)や SKILL.md が無いものはスキップ
+            [ -d "$skill_dir" ] && [ ! -L "$skill_dir" ] && [ -f "$skill_dir/SKILL.md" ] || continue
+            skill_name="$(basename "$skill_dir")"
+            link_file "$skill_dir" "$HOME/.gemini/config/skills/$skill_name"
+            link_file "$skill_dir" "$HOME/.claude/skills/$skill_name"
+        done
+    fi
+
     info "リンク作成完了"
+}
+
+# ----------------------------------------------------------------------
+# 7. Gemini (Antigravity CLI) permissions 設定のマージ
+# ----------------------------------------------------------------------
+setup_gemini_settings() {
+    local perm_file="$DOTFILES_DIR/gemini/permissions.json"
+    local target="$HOME/.gemini/antigravity-cli/settings.json"
+
+    if [ ! -f "$perm_file" ]; then
+        return
+    fi
+    if ! command -v jq >/dev/null 2>&1; then
+        warn "jq が見つからないため、Gemini settings.json のマージをスキップします。"
+        return
+    fi
+
+    mkdir -p "$(dirname "$target")"
+    if [ ! -f "$target" ]; then
+        cp "$perm_file" "$target"
+        chmod 600 "$target"
+        info "Gemini 設定を作成しました: $target"
+        return
+    fi
+
+    local merged
+    merged="$(jq -s '
+        .[0] as $existing |
+        .[1] as $dotfiles |
+        ($existing * {
+            "$schema": $dotfiles."$schema",
+            "permissions": {
+                "allow": ((($existing.permissions.allow // []) + ($dotfiles.permissions.allow // [])) | unique),
+                "deny":  ((($existing.permissions.deny  // []) + ($dotfiles.permissions.deny  // [])) | unique),
+                "ask":   ((($existing.permissions.ask   // []) + ($dotfiles.permissions.ask   // [])) | unique)
+            }
+        })
+    ' "$target" "$perm_file")"
+
+    if [ "$merged" = "$(cat "$target")" ]; then
+        info "OK: $target (permissions 反映済み)"
+        return
+    fi
+
+    mkdir -p "$BACKUP_DIR"
+    cp -p "$target" "$BACKUP_DIR/antigravity-cli.settings.json"
+    printf '%s\n' "$merged" > "$target"
+    chmod 600 "$target"
+    info "Gemini permissions をマージしました: $target"
 }
 
 # ----------------------------------------------------------------------
@@ -328,6 +394,7 @@ main() {
     fi
 
     create_links
+    setup_gemini_settings
 
     # git のユーザー情報はリポジトリに含めないため、~/.gitconfig.local に書く
     setup_git_user

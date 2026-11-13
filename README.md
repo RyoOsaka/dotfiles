@@ -7,9 +7,13 @@ WSL (Ubuntu/Debian 系) 用の dotfiles。シンボリックリンク方式で�
 ```
 dotfiles/
 ├── install.sh              # セットアップスクリプト(冪等)
+├── agents/
+│   └── AGENTS.md           # AI エージェント共通グローバルルール(GEMINI.md / CLAUDE.md へリンク)
 ├── bash/
 │   ├── .bashrc             # bash 本体設定(履歴・プロンプト・fzf・WSL 連携)
 │   └── .bash_aliases       # エイリアス(eza / bat / git ショートカット等)
+├── gemini/
+│   └── permissions.json    # Gemini (Antigravity CLI) の allow / deny / ask 権限定義
 ├── git/
 │   ├── .gitconfig          # git 設定(エイリアス・WSL 向け autocrlf 等。user は ~/.gitconfig.local へ)
 │   └── .gitignore_global   # 全リポジトリ共通 ignore
@@ -69,7 +73,7 @@ cd ~/dotfiles
 
 `install.sh` は以下を行います。
 
-1. apt パッケージのインストール — git, curl, build-essential, ripgrep, fzf, fd-find, bat, jq, tree, htop, bash-completion, wslu, eza
+1. apt パッケージのインストール — git, curl, build-essential, ripgrep, fzf, fd-find, bat, jq, tree, htop, bash-completion, wslu, dnsutils (dig/nslookup/host), whois, eza
 2. GitHub CLI (`gh`)・**starship**(プロンプト)のインストール
 3. Neovim 最新安定版のインストール(GitHub Releases から /opt/nvim へ)
 4. win32yank のインストール(WSL ↔ Windows クリップボード連携)
@@ -77,6 +81,9 @@ cd ~/dotfiles
 6. **Docker Engine** のインストール(WSL ネイティブ。docker compose / buildx プラグイン付き)
 7. **Claude Code** のインストール(公式インストーラ。`~/.local/bin/claude`。初回は `claude` 実行でログイン)
 8. シンボリックリンクの作成(既存ファイルは `~/.dotfiles_backup/<日時>/` に退避)
+   - `agents/AGENTS.md` を `~/.gemini/GEMINI.md` と `~/.claude/CLAUDE.md` の両方にリンク
+   - `~/.agents/skills/*` の共通スキルを `~/.gemini/config/skills/` と `~/.claude/skills/` の両方にリンク
+9. **Gemini (`agy`) の権限設定マージ**(`gemini/permissions.json` を `jq` で `~/.gemini/antigravity-cli/settings.json` に安全にマージ)
 
 ### Docker についての注意
 
