@@ -48,7 +48,7 @@ install_packages() {
 
     # 基本ツール + モダン CLI ツール
     # 1つずつインストールする(一括だと存在しないパッケージが1つあるだけで全滅するため)
-    local pkgs=(build-essential curl wget git unzip bash-completion
+    local pkgs=(ca-certificates gnupg build-essential curl wget git unzip bash-completion
                 ripgrep fzf fd-find bat jq tree htop wslu dnsutils whois)
     local failed=()
     local pkg
@@ -68,7 +68,7 @@ install_packages() {
             info "eza を公式リポジトリからインストールします..."
             sudo mkdir -p /etc/apt/keyrings
             wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc \
-                | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg 2>/dev/null || true
+                | sudo gpg --dearmor --yes -o /etc/apt/keyrings/gierens.gpg 2>/dev/null || true
             echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" \
                 | sudo tee /etc/apt/sources.list.d/gierens.list >/dev/null
             sudo apt-get update -qq && sudo apt-get install -y -qq eza \
@@ -184,7 +184,7 @@ install_docker() {
     info "Docker Engine をインストールします..."
     sudo mkdir -p /etc/apt/keyrings
     wget -qO- https://download.docker.com/linux/ubuntu/gpg \
-        | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg 2>/dev/null || true
+        | sudo gpg --dearmor --yes -o /etc/apt/keyrings/docker.gpg 2>/dev/null || true
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
         | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
     if ! sudo apt-get update -qq || ! sudo apt-get install -y -qq \
@@ -280,11 +280,16 @@ link_file() {
         return
     fi
 
-    # 既存ファイル/リンクはバックアップへ退避
+    # 既存ファイル/リンクは $HOME からの相対パス構造を保ってバックアップへ退避
     if [ -e "$dest" ] || [ -L "$dest" ]; then
-        mkdir -p "$BACKUP_DIR"
-        mv "$dest" "$BACKUP_DIR/"
-        warn "退避: $dest -> $BACKUP_DIR/"
+        local rel="${dest#"$HOME"/}"
+        if [ "$rel" = "$dest" ]; then
+            rel="${dest#/}"
+        fi
+        local backup_target="$BACKUP_DIR/$rel"
+        mkdir -p "$(dirname "$backup_target")"
+        mv "$dest" "$backup_target"
+        warn "退避: $dest -> $backup_target"
     fi
 
     mkdir -p "$(dirname "$dest")"
@@ -330,52 +335,69 @@ create_links() {
 }
 
 # ----------------------------------------------------------------------
-# 7. Gemini (Antigravity CLI) permissions 設定のマージ
+# 7. Gemini (Antigravity CLI) permissions 設定の同期
 # ----------------------------------------------------------------------
 setup_gemini_settings() {
     local perm_file="$DOTFILES_DIR/gemini/permissions.json"
+    local local_perm_file="$HOME/.gemini/permissions.local.json"
     local target="$HOME/.gemini/antigravity-cli/settings.json"
 
     if [ ! -f "$perm_file" ]; then
         return
     fi
     if ! command -v jq >/dev/null 2>&1; then
-        warn "jq が見つからないため、Gemini settings.json のマージをスキップします。"
+        warn "jq が見つからないため、Gemini settings.json の更新をスキップします。"
         return
     fi
 
+    local existing_json='{}'
+    if [ -s "$target" ]; then
+        existing_json="$(cat "$target")"
+    fi
+
+    local local_perms='{}'
+    if [ -s "$local_perm_file" ]; then
+        local_perms="$(cat "$local_perm_file")"
+    fi
+
+    # permissions 以外の既存設定(モデル設定等)は保持しつつ、
+    # permissions.{allow,deny,ask} は dotfiles 側(+ ~/.gemini/permissions.local.json)で同期上書きする
+    local merged
+    merged="$(jq -n \
+        --argjson existing "$existing_json" \
+        --slurpfile dotfiles "$perm_file" \
+        --argjson local_cfg "$local_perms" '
+        $dotfiles[0] as $df |
+        ($local_cfg.permissions // $local_cfg) as $lp |
+        ($existing * {
+            "$schema": $df."$schema",
+            "permissions": {
+                "allow": ((($df.permissions.allow // []) + ($lp.allow // [])) | unique),
+                "deny":  ((($df.permissions.deny  // []) + ($lp.deny  // [])) | unique),
+                "ask":   ((($df.permissions.ask   // []) + ($lp.ask   // [])) | unique)
+            }
+        })
+    ')"
+
     mkdir -p "$(dirname "$target")"
     if [ ! -f "$target" ]; then
-        cp "$perm_file" "$target"
+        printf '%s\n' "$merged" > "$target"
         chmod 600 "$target"
         info "Gemini 設定を作成しました: $target"
         return
     fi
 
-    local merged
-    merged="$(jq -s '
-        .[0] as $existing |
-        .[1] as $dotfiles |
-        ($existing * {
-            "$schema": $dotfiles."$schema",
-            "permissions": {
-                "allow": ((($existing.permissions.allow // []) + ($dotfiles.permissions.allow // [])) | unique),
-                "deny":  ((($existing.permissions.deny  // []) + ($dotfiles.permissions.deny  // [])) | unique),
-                "ask":   ((($existing.permissions.ask   // []) + ($dotfiles.permissions.ask   // [])) | unique)
-            }
-        })
-    ' "$target" "$perm_file")"
-
-    if [ "$merged" = "$(cat "$target")" ]; then
-        info "OK: $target (permissions 反映済み)"
+    if [ "$merged" = "$existing_json" ]; then
+        info "OK: $target (permissions 同期済み)"
         return
     fi
 
-    mkdir -p "$BACKUP_DIR"
-    cp -p "$target" "$BACKUP_DIR/antigravity-cli.settings.json"
+    local backup_target="$BACKUP_DIR/.gemini/antigravity-cli/settings.json"
+    mkdir -p "$(dirname "$backup_target")"
+    cp -p "$target" "$backup_target"
     printf '%s\n' "$merged" > "$target"
     chmod 600 "$target"
-    info "Gemini permissions をマージしました: $target"
+    info "Gemini permissions を同期しました: $target"
 }
 
 # ----------------------------------------------------------------------

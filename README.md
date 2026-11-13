@@ -83,7 +83,7 @@ cd ~/dotfiles
 8. シンボリックリンクの作成(既存ファイルは `~/.dotfiles_backup/<日時>/` に退避)
    - `agents/AGENTS.md` を `~/.gemini/GEMINI.md` と `~/.claude/CLAUDE.md` の両方にリンク
    - `~/.agents/skills/*` の共通スキルを `~/.gemini/config/skills/` と `~/.claude/skills/` の両方にリンク
-9. **Gemini (`agy`) の権限設定マージ**(`gemini/permissions.json` を `jq` で `~/.gemini/antigravity-cli/settings.json` に安全にマージ)
+9. **Gemini (`agy`) の権限設定同期**(`gemini/permissions.json` を `jq` で `~/.gemini/antigravity-cli/settings.json` の `permissions` に同期。`permissions` 以外の既存設定は保持)
 
 ### Docker についての注意
 
@@ -113,6 +113,7 @@ git 管理したくない設定は以下のファイルに書きます(存在す
 
 - `~/.bashrc.local` — マシン固有のシェル設定
 - `~/.gitconfig.local` — マシン固有の git 設定
+- `~/.gemini/permissions.local.json` — マシン固有の Gemini (`agy`) 追加権限ルール(`allow` / `deny` / `ask`)
 
 **git の名前・メールアドレス**はリポジトリにコミットしないよう、
 `.gitconfig` ではなく `~/.gitconfig.local` に保存します。
