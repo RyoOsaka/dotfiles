@@ -92,7 +92,8 @@
       "command(git merge)",
       "command(git mv)",
       "command(git update-index)",
-      "command(regex:^git (-C [^ ]+ )?(status|diff|log|branch|show|rev-parse|remote|tag|ls-files|blame|describe|shortlog|reflog|stash|worktree|config --(get|list)|add|commit|checkout|switch|fetch|merge|mv|update-index).*)",
+      "command(regex:git -C [^ ]+ (status|diff|log|branch|show|rev-parse|remote|tag|ls-files|blame|describe|shortlog|reflog|stash|worktree|add|commit|checkout|switch|fetch|merge|mv|update-index))",
+      "command(regex:git -C [^ ]+ config --(get|list))",
       "command(gh issue list)",
       "command(gh issue view)",
       "command(gh pr list)",
@@ -211,16 +212,12 @@
       "command(pnpm install)",
       "command(rm)",
       "command(mv)",
-      "command(curl)",
       "command(wget)",
       "command(docker push)",
       "command(docker login)",
       "command(docker run)",
       "command(docker compose down -v)",
-      "command(aws)",
-      "command(gcloud)",
-      "command(kubectl apply)",
-      "command(kubectl)"
+      "command(kubectl apply)"
     ]
   }
 }
